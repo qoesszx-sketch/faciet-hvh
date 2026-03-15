@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>gamesense</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FACEIT.CC</title>
     <style>
         :root {
-            --bg-dark: #111111;
+            --bg-dark: #0c0c0c;
             --bg-panel: #151515;
             --border-outer: #3c3c3c;
             --border-inner: #232323;
@@ -14,13 +15,11 @@
             --text-dim: #888888;
         }
 
-        @font-face {
-            font-family: 'SkeetFont';
-            src: url('https://fonts.cdnfonts.com/s/16030/Tahoma.woff') format('woff');
-        }
+        /* Устанавливаем базовые стили для правильного расчета размеров */
+        * { box-sizing: border-box; }
 
         body {
-            background-color: #0c0c0c;
+            background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: 'Tahoma', sans-serif;
             font-size: 11px;
@@ -28,16 +27,18 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden; /* Запрет горизонтального скролла */
         }
 
+        /* СНЕГ НА ЗАДНЕМ ПЛАНЕ */
         canvas#snow { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 0; opacity: 0.3; }
 
         /* ГЛАВНЫЙ КОНТЕЙНЕР (SKEET MENU) */
         .skeet-container {
-            width: 700px;
-            height: 480px;
+            width: 95%;
+            max-width: 850px;
+            min-height: 500px;
             background: var(--bg-panel);
             border: 1px solid #000;
             outline: 1px solid var(--border-outer);
@@ -45,24 +46,25 @@
             z-index: 10;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
-        /* ПОЛОСКА СВЕРХУ */
+        /* РАЗНОЦВЕТНАЯ РАДУГА */
         .skeet-rainbow {
             height: 2px;
             background: linear-gradient(to right, #5d7ad3, #c35dbf, #e3c15d, #5de39d, #5d7ad3);
             width: 100%;
         }
 
-        .skeet-main { display: flex; flex: 1; }
+        .skeet-main { display: flex; flex: 1; min-height: 0; }
 
         /* ЛЕВАЯ ПАНЕЛЬ */
         .skeet-tabs {
-            width: 140px;
+            width: 150px;
             border-right: 1px solid var(--border-inner);
             background: #121212;
-            padding: 15px 0;
+            padding: 10px 0;
+            flex-shrink: 0;
         }
 
         .tab-item {
@@ -71,54 +73,45 @@
             text-transform: lowercase;
             cursor: pointer;
             transition: 0.2s;
-            display: flex;
-            align-items: center;
         }
 
-        .tab-item:hover, .tab-item.active {
-            color: #fff;
-            background: linear-gradient(to right, rgba(165,192,91,0.05), transparent);
-        }
-
+        .tab-item:hover, .tab-item.active { color: #fff; background: rgba(255,255,255,0.02); }
         .tab-item.active { border-left: 2px solid var(--accent); }
 
         /* КОНТЕНТ */
-        .skeet-content {
-            flex: 1;
-            padding: 20px;
-            background: #151515;
-            position: relative;
-        }
+        .skeet-content { flex: 1; padding: 20px; overflow-y: auto; background: #151515; }
 
+        /* ГРУПП-БОКСЫ (ФОРУМНЫЙ СТИЛЬ) */
         .group-box {
             border: 1px solid var(--border-inner);
             padding: 15px;
             position: relative;
             margin-bottom: 20px;
             background: #171717;
+            width: 100%; /* Гарантирует ширину внутри родителя */
         }
 
         .group-label {
             position: absolute;
             top: -8px;
-            left: 12px;
+            left: 10px;
             background: #171717;
             padding: 0 5px;
             color: #fff;
             font-size: 10px;
-            text-transform: lowercase;
         }
 
-        /* КНОПКИ И ИНПУТЫ */
+        /* ИСПРАВЛЕНО: СТИЛИ ПОЛЕЙ ВВОДА (ОТЦЕНТРОВКА) */
         input {
             background: #0d0d0d;
             border: 1px solid var(--border-inner);
             color: #fff;
             padding: 8px;
-            width: 100%;
+            width: 100%; /* Занимает всю ширинуgroup-box */
             margin-bottom: 10px;
-            font-family: inherit;
             font-size: 11px;
+            font-family: 'Tahoma', sans-serif;
+            display: block; /* Убираем инлайновые смещения */
         }
 
         .skeet-btn {
@@ -126,36 +119,36 @@
             border: 1px solid #000;
             outline: 1px solid var(--border-outer);
             color: #fff;
-            padding: 8px 15px;
+            padding: 7px 15px;
             cursor: pointer;
             text-transform: lowercase;
             font-size: 11px;
-            transition: 0.1s;
+            width: 100%;
         }
 
-        .skeet-btn:active { background: #1a1a1a; outline-color: var(--accent); }
+        .skeet-btn:active { outline-color: var(--accent); }
 
-        /* СПЕЦИФИКА ЧАТА */
-        .chat-area {
-            height: 200px;
-            background: #0d0d0d;
-            border: 1px solid var(--border-inner);
-            padding: 10px;
-            overflow-y: auto;
-            font-size: 10px;
-            margin-bottom: 10px;
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 600px) {
+            .skeet-main { flex-direction: column; }
+            .skeet-tabs { width: 100%; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border-inner); }
+            .tab-item { flex: 1; text-align: center; border-left: none !important; border-bottom: 2px solid transparent; padding: 10px; white-space: nowrap; }
+            .tab-item.active { border-bottom: 2px solid var(--accent); }
+            .skeet-container { margin: 10px auto; width: 92%; }
+            /* Исправление отступов в group-box на мобильных */
+            .group-box { padding: 12px; }
         }
 
-        .chat-msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
+        /* ЧАТ */
+        .chat-area { height: 180px; background: #0d0d0d; border: 1px solid var(--border-inner); padding: 10px; overflow-y: auto; margin-bottom: 10px; }
+        .chat-msg { margin-bottom: 4px; }
         .chat-msg b { color: var(--accent); }
-
+        
         .auth-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 100;
+            background: rgba(0,0,0,0.85); z-index: 100;
             display: flex; justify-content: center; align-items: center;
         }
-
-        .admin-tag { color: #ff4444 !important; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -163,27 +156,27 @@
 <canvas id="snow"></canvas>
 
 <div id="auth-screen" class="auth-overlay">
-    <div class="skeet-container" style="width: 300px; height: auto;">
+    <div class="skeet-container" style="max-width: 320px; min-height: auto;">
         <div class="skeet-rainbow"></div>
-        <div class="padding" style="padding: 25px;">
+        <div style="padding: 20px;">
             <div id="login-form">
                 <div class="group-box">
-                    <span class="group-label">authorization</span>
+                    <span class="group-label">faceit.cc - login</span>
                     <input type="text" id="l-login" placeholder="username">
                     <input type="password" id="l-pass" placeholder="password">
-                    <button class="skeet-btn" onclick="app.login()" style="width: 100%;">log in</button>
-                    <p style="text-align:center; font-size: 9px; cursor:pointer;" onclick="app.toggleAuth(false)">create an account</p>
+                    <button class="skeet-btn" onclick="app.login()">login</button>
+                    <div style="text-align:center; margin-top:10px; cursor:pointer; color:#555;" onclick="app.toggleAuth(false)">register</div>
                 </div>
             </div>
             <div id="reg-form" style="display:none;">
                 <div class="group-box">
-                    <span class="group-label">registration</span>
+                    <span class="group-label">faceit.cc - registration</span>
                     <input type="text" id="r-login" placeholder="username">
                     <input type="password" id="r-pass" placeholder="password">
-                    <input type="text" id="r-nick" placeholder="display name">
+                    <input type="text" id="r-nick" placeholder="nickname">
                     <input type="text" id="r-invite" placeholder="invite key">
-                    <button class="skeet-btn" onclick="app.register()" style="width: 100%;">sign up</button>
-                    <p style="text-align:center; font-size: 9px; cursor:pointer;" onclick="app.toggleAuth(true)">back to login</p>
+                    <button class="skeet-btn" onclick="app.register()">register</button>
+                    <div style="text-align:center; margin-top:10px; cursor:pointer; color:#555;" onclick="app.toggleAuth(true)">back</div>
                 </div>
             </div>
         </div>
@@ -197,61 +190,57 @@
             <div class="tab-item active" onclick="app.view('home')">home</div>
             <div class="tab-item" onclick="app.view('chat')">chat</div>
             <div class="tab-item" onclick="app.view('news')">news</div>
-            <div class="tab-item" onclick="app.view('stats')">statistics</div>
+            <div class="tab-item" onclick="app.view('stats')">stats</div>
         </div>
         
         <div class="skeet-content">
             <div id="v-home" class="tab-view">
                 <div class="group-box">
-                    <span class="group-label">profile information</span>
-                    <div style="display:flex; align-items: center;">
-                        <img id="u-lvl-img" src="" style="width: 60px; height: 60px; margin-right: 20px; border: 1px solid var(--border-inner);">
+                    <span class="group-label">information</span>
+                    <div style="display:flex; align-items:center; flex-wrap: wrap; gap: 10px;">
+                        <img id="u-lvl-img" src="" style="width:50px; height:50px; border:1px solid var(--border-inner); background: #000;">
                         <div>
-                            <div style="font-size: 14px; color: #fff;" id="u-nick">User</div>
-                            <div style="color: var(--text-dim);" id="u-status">Standard Member</div>
+                            <div id="u-nick" style="font-size:14px; color:#fff;">User</div>
+                            <div id="u-status" style="color:#555;">Private Member</div>
                         </div>
                     </div>
                 </div>
                 <div class="group-box">
                     <span class="group-label">matchmaking</span>
-                    <p style="color: var(--text-dim);">search for matches on private servers.</p>
-                    <button id="q-btn" class="skeet-btn" onclick="app.search()">start searching</button>
-                    <div id="q-status" style="margin-top:10px; color: var(--accent); display:none;">Finding match...</div>
+                    <button class="skeet-btn" onclick="app.search()" id="q-btn" style="max-width: 200px;">search match</button>
+                    <div id="q-status" style="margin-top:10px; color:var(--accent); display:none;">searching...</div>
                 </div>
             </div>
 
             <div id="v-chat" class="tab-view" style="display:none;">
                 <div class="group-box">
-                    <span class="group-label">global relay chat</span>
+                    <span class="group-label">network chat</span>
                     <div class="chat-area" id="chat-stream"></div>
                     <div style="display:flex;">
-                        <input type="text" id="chat-input" placeholder="enter message..." style="margin:0; flex:1;">
-                        <button class="skeet-btn" style="margin:0 0 0 5px;" onclick="app.sendMsg()">send</button>
+                        <input type="text" id="chat-input" placeholder="..." style="margin:0;">
+                        <button class="skeet-btn" style="width:60px; margin-left:5px;" onclick="app.sendMsg()">send</button>
                     </div>
                 </div>
             </div>
 
             <div id="v-news" class="tab-view" style="display:none;">
                 <div id="admin-news-panel" class="group-box" style="display:none;">
-                    <span class="group-label">administration panel</span>
-                    <input type="text" id="news-text" placeholder="what's new?">
-                    <button class="skeet-btn" onclick="app.postNews()">publish news</button>
+                    <span class="group-label">admin</span>
+                    <input type="text" id="news-text" placeholder="news text...">
+                    <button class="skeet-btn" onclick="app.postNews()">post</button>
                 </div>
                 <div class="group-box">
-                    <span class="group-label">latest updates</span>
-                    <div id="news-list" style="max-height: 250px; overflow-y: auto;"></div>
+                    <span class="group-label">updates</span>
+                    <div id="news-list"></div>
                 </div>
             </div>
 
             <div id="v-stats" class="tab-view" style="display:none;">
                 <div class="group-box">
-                    <span class="group-label">your performance</span>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div class="group-box" style="margin:0;"><span class="group-label">ELO</span><span id="s-elo">0</span></div>
-                        <div class="group-box" style="margin:0;"><span class="group-label">MATCHES</span><span id="s-matches">0</span></div>
-                        <div class="group-box" style="margin:0;"><span class="group-label">WINRATE</span><span id="s-wr">0%</span></div>
-                        <div class="group-box" style="margin:0;"><span class="group-label">LEVEL</span><span id="s-lvl">1</span></div>
-                    </div>
+                    <span class="group-label">statistics</span>
+                    <p>ELO: <span id="s-elo" style="color:var(--accent);">0</span></p>
+                    <p>LEVEL: <span id="s-lvl">1</span></p>
+                    <p>MATCHES: <span id="s-matches">0</span></p>
                 </div>
             </div>
         </div>
@@ -259,45 +248,61 @@
 </div>
 
 <script>
-    // SNOW EFFECT
+    /* ЭФФЕКТ СНЕГА */
     const canvas = document.getElementById('snow');
     const ctx = canvas.getContext('2d');
     let w, h, flakes = [];
+    
     function initSnow() {
         w = canvas.width = window.innerWidth;
         h = canvas.height = window.innerHeight;
         flakes = [];
-        for(let i=0; i<60; i++) flakes.push({x:Math.random()*w, y:Math.random()*h, s:Math.random()*2+1});
+        // Создаем 60 снежинок
+        for(let i=0; i<60; i++) {
+            flakes.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                s: Math.random() * 2 + 1, // Размер снежинки
+                d: Math.random() * 0.5 + 0.1 // Скорость падения
+            });
+        }
     }
+    
     function drawSnow() {
-        ctx.clearRect(0,0,w,h); ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; // Полупрозрачный белый цвет
         ctx.beginPath();
         flakes.forEach(f => {
-            ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.s, 0, Math.PI*2);
-            f.y += f.s * 0.3; if(f.y > h) f.y = -5;
+            ctx.moveTo(f.x, f.y);
+            ctx.arc(f.x, f.y, f.s, 0, Math.PI * 2);
+            // Движение снежинки вниз
+            f.y += f.s * f.d;
+            // Если снежинка ушла за экран, возвращаем её наверх
+            if(f.y > h) f.y = -5;
         });
-        ctx.fill(); requestAnimationFrame(drawSnow);
+        ctx.fill();
+        requestAnimationFrame(drawSnow);
     }
-    window.onresize = initSnow; initSnow(); drawSnow();
+    
+    window.addEventListener('resize', initSnow);
+    initSnow();
+    drawSnow();
 
-    // CORE LOGIC
+    /* ЛОГИКА ПРИЛОЖЕНИЯ */
     const app = {
         user: null,
-
         toggleAuth(isLogin) {
             document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
             document.getElementById('reg-form').style.display = isLogin ? 'none' : 'block';
         },
-
         view(id) {
             document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             document.getElementById('v-'+id).style.display = 'block';
-            event.currentTarget.classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
             if(id === 'news') this.loadNews();
             if(id === 'chat') this.loadChat();
         },
-
         async register() {
             const data = {
                 login: document.getElementById('r-login').value,
@@ -305,61 +310,55 @@
                 nickname: document.getElementById('r-nick').value,
                 invite: document.getElementById('r-invite').value
             };
+            if(!data.login || !data.password || !data.nickname || !data.invite) return alert('fill all fields');
+            
             const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            if(res.ok) { alert('Welcome. Login now.'); this.toggleAuth(true); } else { alert('Error'); }
+            if(res.ok) { alert('success'); this.toggleAuth(true); } else { const err = await res.json(); alert(err.error); }
         },
-
         async login() {
             const login = document.getElementById('l-login').value;
-            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ login, password: document.getElementById('l-pass').value }) });
+            const password = document.getElementById('l-pass').value;
+            if(!login || !password) return alert('fill all fields');
+
+            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ login, password }) });
             if(res.ok) {
                 const data = await res.json();
                 this.user = data.user;
                 this.updateUI();
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('main-menu').style.display = 'block';
-            } else { alert('Access Denied'); }
+            } else { alert('failed'); }
         },
-
         updateUI() {
             document.getElementById('u-nick').innerText = this.user.nickname;
             document.getElementById('s-elo').innerText = this.user.elo;
             document.getElementById('s-matches').innerText = this.user.matches;
             document.getElementById('s-lvl').innerText = this.user.level;
             document.getElementById('u-lvl-img').src = `https://back.faceit.com/s3/faceit-stats/images/elo-levels/level${this.user.level}.png`;
-            
             if(this.user.nickname === 'Admin-hvh') {
-                document.getElementById('u-status').innerHTML = '<span class="admin-tag">Administrator</span>';
+                document.getElementById('u-status').innerHTML = '<span style="color:#ff4444; font-weight:bold;">Administrator</span>';
                 document.getElementById('admin-news-panel').style.display = 'block';
             }
         },
-
         async loadNews() {
             const res = await fetch('/api/news');
             const data = await res.json();
-            document.getElementById('news-list').innerHTML = data.map(n => `
-                <div style="border-bottom:1px solid #222; padding: 5px 0;">
-                    <div style="color:#fff;">${n.text}</div>
-                    <div style="font-size:9px; color:#555;">${n.date} by ${n.author}</div>
-                </div>
-            `).join('');
+            document.getElementById('news-list').innerHTML = data.map(n => `<div style="margin-bottom:10px; border-bottom:1px solid #222; padding-bottom:5px;"><div>${n.text}</div><div style="font-size:9px; color:#444;">${n.date}</div></div>`).join('');
         },
-
         async postNews() {
             const text = document.getElementById('news-text').value;
+            if(!text) return;
             await fetch('/api/news', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nickname: this.user.nickname, text }) });
             document.getElementById('news-text').value = '';
             this.loadNews();
         },
-
         async loadChat() {
             const res = await fetch('/api/chat');
             const data = await res.json();
             const box = document.getElementById('chat-stream');
-            box.innerHTML = data.map(m => `<div class="chat-msg">[${m.time}] <b>${m.nickname}:</b> ${m.message}</div>`).join('');
+            box.innerHTML = data.map(m => `<div class="chat-msg"><b>${m.nickname}:</b> ${m.message}</div>`).join('');
             box.scrollTop = box.scrollHeight;
         },
-
         async sendMsg() {
             const inp = document.getElementById('chat-input');
             if(!inp.value) return;
@@ -367,20 +366,18 @@
             inp.value = '';
             this.loadChat();
         },
-
         search() {
             const btn = document.getElementById('q-btn');
             const stat = document.getElementById('q-status');
             btn.disabled = true; stat.style.display = 'block';
-            setTimeout(() => {
-                btn.disabled = false; stat.style.display = 'none';
-                alert('Match found! Loading server...');
-            }, 3000);
+            setTimeout(() => { btn.disabled = false; stat.style.display = 'none'; alert('Match found! IP: 185.12.33.10:27015'); }, 3000);
         }
     };
-
-    // Обновляем чат раз в 3 секунды
-    setInterval(() => { if(document.getElementById('v-chat').style.display !== 'none') app.loadChat(); }, 3000);
+    
+    // Автообновление чата
+    setInterval(() => { 
+        if(this.user && document.getElementById('v-chat').style.display !== 'none') app.loadChat(); 
+    }, 3000);
 </script>
 </body>
 </html>
