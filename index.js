@@ -4,101 +4,87 @@ const path = require('path');
 const app = express();
 
 app.use(express.json());
-app.use(express.static(__dirname)); // Раздает index.html из корня
+app.use(express.static(__dirname));
 
 const DB_PATH = './database.json';
 const INVITES_PATH = './invites.json';
+const NEWS_PATH = './news.json';
+const CHAT_PATH = './chat.json';
 
-// --- АВТОМАТИЧЕСКАЯ ПРОВЕРКА ФАЙЛОВ ---
-if (!fs.existsSync(DB_PATH)) {
-    fs.writeFileSync(DB_PATH, JSON.stringify({}, null, 2));
-    console.log("[INIT] database.json создан.");
-}
+// Инициализация файлов при запуске
+const initFile = (path, content) => {
+    if (!fs.existsSync(path)) fs.writeFileSync(path, JSON.stringify(content, null, 2));
+};
+
+initFile(DB_PATH, {});
+initFile(NEWS_PATH, []);
+initFile(CHAT_PATH, []);
 
 // --- API: РЕГИСТРАЦИЯ ---
 app.post('/api/register', (req, res) => {
-    try {
-        const { login, password, nickname, invite } = req.body;
+    const { login, password, nickname, invite } = req.body;
+    const invites = JSON.parse(fs.readFileSync(INVITES_PATH, 'utf8'));
+    
+    if (!invites.includes(invite)) return res.status(403).json({ error: "Invalid registration key" });
+    
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    if (db[login]) return res.status(400).json({ error: "Username already taken" });
 
-        if (!login || !password || !nickname || !invite) {
-            return res.status(400).json({ error: "Заполните все поля!" });
-        }
-
-        // Читаем инвайты
-        const invites = JSON.parse(fs.readFileSync(INVITES_PATH, 'utf8'));
-        const inviteIndex = invites.indexOf(invite.trim());
-
-        if (inviteIndex === -1) {
-            console.log(`[AUTH] Отказ: Неверный инвайт [${invite}]`);
-            return res.status(403).json({ error: "INVALID INVITE" });
-        }
-
-        const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-        if (db[login]) {
-            return res.status(400).json({ error: "Логин занят!" });
-        }
-
-        // Сохраняем игрока
-        db[login] = { 
-            password, 
-            nickname, 
-            elo: 100, 
-            level: 1, 
-            matches: 0, 
-            wins: 0 
-        };
-        fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-
-        console.log(`[SUCCESS] Зарегистрирован: ${nickname}`);
-        res.json({ success: true });
-
-    } catch (err) {
-        console.error("[ERROR]", err);
-        res.status(500).json({ error: "Ошибка сервера" });
-    }
+    db[login] = { 
+        password, 
+        nickname, 
+        elo: 1000, 
+        level: 1, 
+        matches: 0, 
+        wins: 0,
+        isAdmin: nickname === 'Admin-hvh'
+    };
+    
+    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+    res.json({ success: true });
 });
 
 // --- API: ВХОД ---
 app.post('/api/login', (req, res) => {
     const { login, password } = req.body;
     const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    const user = db[login];
 
-    if (db[login] && db[login].password === password) {
-        res.json({ success: true, user: db[login] });
+    if (user && user.password === password) {
+        res.json({ success: true, user });
     } else {
-        res.status(401).json({ error: "Ошибка авторизации" });
+        res.status(401).json({ error: "Login failed" });
     }
 });
 
-// --- API: МАТЧМЕЙКИНГ ---
-app.post('/api/match', (req, res) => {
-    const { login } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+// --- API: НОВОСТИ (Доступ только для Admin-hvh) ---
+app.post('/api/news', (req, res) => {
+    const { nickname, text } = req.body;
+    if (nickname !== 'Admin-hvh') return res.status(403).json({ error: "No permission" });
 
-    if (!db[login]) return res.status(404).send();
+    const news = JSON.parse(fs.readFileSync(NEWS_PATH, 'utf8'));
+    news.unshift({ text, date: new Date().toLocaleString(), author: nickname });
+    fs.writeFileSync(NEWS_PATH, JSON.stringify(news.slice(0, 15), null, 2));
+    res.json({ success: true });
+});
 
-    setTimeout(() => {
-        const win = Math.random() > 0.45;
-        const gain = win ? 25 : -20;
-        
-        db[login].elo += gain;
-        if (db[login].elo < 100) db[login].elo = 100;
-        db[login].matches += 1;
-        if (win) db[login].wins += 1;
-        
-        // Расчет уровня Faceit
-        let e = db[login].elo;
-        let lvl = 1;
-        if(e >= 200) lvl = 2; if(e >= 400) lvl = 3; if(e >= 600) lvl = 4;
-        if(e >= 800) lvl = 5; if(e >= 1000) lvl = 6; if(e >= 1300) lvl = 8; if(e >= 1800) lvl = 10;
-        db[login].level = lvl;
+app.get('/api/news', (req, res) => {
+    res.json(JSON.parse(fs.readFileSync(NEWS_PATH, 'utf8')));
+});
 
-        fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-        res.json({ win, gain, user: db[login] });
-    }, 4000);
+// --- API: ЧАТ (С сохранением в файл) ---
+app.post('/api/chat', (req, res) => {
+    const { nickname, message } = req.body;
+    const chat = JSON.parse(fs.readFileSync(CHAT_PATH, 'utf8'));
+    const msg = { nickname, message, time: new Date().toLocaleTimeString() };
+    chat.push(msg);
+    fs.writeFileSync(CHAT_PATH, JSON.stringify(chat.slice(-50), null, 2));
+    res.json(msg);
+});
+
+app.get('/api/chat', (req, res) => {
+    res.json(JSON.parse(fs.readFileSync(CHAT_PATH, 'utf8')));
 });
 
 const PORT = 8080;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[SYSTEM] FACEIT.CC запущен на порту ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`[SKEET.CC] Engine started on ${PORT}`));
