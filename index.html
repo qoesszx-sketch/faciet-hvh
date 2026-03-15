@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FACEIT.CC | PRIVATE NETWORK</title>
+    <style>
+        :root { --accent: #ff4a22; --bg: #050505; --card: #0a0a0a; --border: #151515; --text: #eee; }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Tahoma', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+
+        /* SNOW SYSTEM */
+        canvas#snow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+        /* UI ELEMENTS */
+        .app-wrapper { width: 340px; background: var(--card); border: 1px solid var(--border); position: relative; z-index: 10; box-shadow: 0 20px 50px rgba(0,0,0,0.9); transition: 0.5s; }
+        .app-wrapper.expanded { width: 700px; }
+        .top-line { height: 2px; background: var(--accent); }
+        .padding { padding: 25px; }
+
+        /* LOGO & HEADER */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .logo { font-weight: bold; letter-spacing: 2px; font-size: 14px; text-transform: uppercase; }
+        .logo span { color: var(--accent); }
+
+        /* INPUTS */
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 9px; color: #555; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); padding: 12px; color: #fff; font-size: 12px; }
+        input:focus { border-color: var(--accent); }
+
+        /* BUTTONS */
+        .btn { width: 100%; padding: 13px; background: transparent; border: 1px solid var(--accent); color: var(--accent); cursor: pointer; text-transform: uppercase; font-size: 10px; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background: var(--accent); color: #fff; }
+        .btn:disabled { border-color: #333; color: #333; cursor: wait; }
+
+        /* TABS & DASHBOARD */
+        .nav { display: flex; border-bottom: 1px solid var(--border); background: #080808; }
+        .nav-t { flex: 1; text-align: center; padding: 15px; font-size: 10px; cursor: pointer; color: #444; text-transform: uppercase; transition: 0.3s; }
+        .nav-t.active { color: var(--accent); border-bottom: 1px solid var(--accent); background: #0c0c0c; }
+
+        /* DASHBOARD CONTENT */
+        .dashboard { display: flex; height: 400px; }
+        .sidebar-stats { width: 200px; border-right: 1px solid var(--border); padding: 20px; background: #070707; }
+        .main-view { flex: 1; padding: 25px; overflow-y: auto; }
+
+        .lvl-icon { width: 80px; height: 80px; margin: 0 auto 15px; display: block; filter: drop-shadow(0 0 10px rgba(255,74,34,0.2)); }
+        .stat-val { font-size: 18px; color: #fff; margin-bottom: 5px; }
+        .stat-lbl { font-size: 9px; color: #444; text-transform: uppercase; margin-bottom: 15px; }
+
+        /* CHAT */
+        .chat-box { height: 280px; overflow-y: auto; background: #000; border: 1px solid var(--border); padding: 10px; font-size: 11px; margin-bottom: 10px; }
+        .msg { margin-bottom: 8px; border-left: 2px solid var(--accent); padding-left: 8px; line-height: 1.4; }
+        .msg b { color: var(--accent); }
+
+        .error-alert { color: #ff3333; font-size: 10px; text-align: center; margin-bottom: 10px; display: none; }
+        #queue-label { text-align: center; font-size: 10px; color: var(--accent); margin-top: 10px; display: none; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+<canvas id="snow"></canvas>
+
+<div class="app-wrapper" id="app">
+    <div class="top-line"></div>
+    
+    <div id="view-reg" class="padding">
+        <div class="header">
+            <div class="logo">FACEIT<span>.CC</span></div>
+            <div style="font-size: 8px; color: #333;">V.1.1.0</div>
+        </div>
+        <div id="reg-err" class="error-alert">INVALID DATA</div>
+        <div class="group"><label>Username</label><input type="text" id="r-login"></div>
+        <div class="group"><label>Password</label><input type="password" id="r-pass"></div>
+        <div class="group"><label>Display Name</label><input type="text" id="r-nick"></div>
+        <div class="group"><label>Invite Code</label><input type="text" id="r-invite"></div>
+        <button class="btn" onclick="core.register()">Initialize</button>
+        <div style="text-align: center; font-size: 9px; margin-top: 15px; color: #333; cursor: pointer;" onclick="core.switchView('login')">ALREADY REGISTERED?</div>
+    </div>
+
+    <div id="view-login" class="padding" style="display:none;">
+        <div class="header"><div class="logo">FACEIT<span>.CC</span></div></div>
+        <div class="group"><label>Login</label><input type="text" id="l-login"></div>
+        <div class="group"><label>Password</label><input type="password" id="l-pass"></div>
+        <button class="btn" onclick="core.login()">Authorize</button>
+    </div>
+
+    <div id="view-main" style="display:none;">
+        <div class="nav">
+            <div class="nav-t active" onclick="core.tab('play')">Matchmaking</div>
+            <div class="nav-t" onclick="core.tab('chat')">Live Chat</div>
+            <div class="nav-t" onclick="core.tab('news')">News</div>
+        </div>
+        <div class="dashboard">
+            <div class="sidebar-stats">
+                <img id="u-lvl-img" src="" class="lvl-icon">
+                <div class="stat-val" id="u-nick">NAME</div>
+                <div class="stat-lbl">Nickname</div>
+                <div class="stat-val" id="u-elo">100</div>
+                <div class="stat-lbl">Elo Rating</div>
+                <div class="stat-val" id="u-matches">0</div>
+                <div class="stat-lbl">Matches</div>
+            </div>
+            <div class="main-view">
+                <div id="tab-play" class="t-view">
+                    <h3 style="margin-top:0; font-size: 14px;">5V5 RANKED QUEUE</h3>
+                    <p style="font-size: 11px; color: #555; margin-bottom: 40px;">Search for competitive matches against other members of the network.</p>
+                    <button class="btn" id="q-btn" onclick="core.startMatch()">Search Match</button>
+                    <div id="queue-label">SEARCHING FOR OPPONENTS...</div>
+                </div>
+                <div id="tab-chat" class="t-view" style="display:none;">
+                    <div class="chat-box" id="chat-stream">
+                        <div class="msg"><b>SYSTEM:</b> Welcome to the private relay.</div>
+                    </div>
+                    <input type="text" id="chat-input" placeholder="Message..." style="border-radius: 0;">
+                </div>
+                <div id="tab-news" class="t-view" style="display:none;">
+                    <div class="msg"><b>[Update]</b> Faceit AC bypass improved (v.4.2).</div>
+                    <div class="msg"><b>[Notice]</b> Weekly ELO reset in 2 days.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* SNOW ENGINE (60 FPS) */
+    const canvas = document.getElementById('snow');
+    const ctx = canvas.getContext('2d');
+    let w, h, flakes = [];
+    function init() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+        flakes = [];
+        for(let i=0; i<100; i++) flakes.push({x:Math.random()*w, y:Math.random()*h, s:Math.random()*2+1, d:Math.random()*1});
+    }
+    function draw() {
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        flakes.forEach(f => {
+            ctx.moveTo(f.x, f.y);
+            ctx.arc(f.x, f.y, f.s, 0, Math.PI*2);
+            f.y += f.s * 0.5;
+            if(f.y > h) f.y = -5;
+        });
+        ctx.fill();
+        requestAnimationFrame(draw);
+    }
+    window.onresize = init; init(); draw();
+
+    /* CORE LOGIC */
+    const core = {
+        user: null,
+        switchView(id) {
+            document.querySelectorAll('#app > div:not(.top-line)').forEach(v => v.style.display = 'none');
+            document.getElementById('view-'+id).style.display = 'block';
+            if(id === 'main') document.getElementById('app').classList.add('expanded');
+        },
+        tab(id) {
+            document.querySelectorAll('.t-view').forEach(v => v.style.display = 'none');
+            document.querySelectorAll('.nav-t').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-'+id).style.display = 'block';
+            event.target.classList.add('active');
+        },
+        async register() {
+            const data = {
+                login: document.getElementById('r-login').value,
+                password: document.getElementById('r-pass').value,
+                nickname: document.getElementById('r-nick').value,
+                invite: document.getElementById('r-invite').value
+            };
+            const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+            if(res.ok) this.switchView('login');
+            else document.getElementById('reg-err').style.display = 'block';
+        },
+        async login() {
+            const res = await fetch('/api/login', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ login: document.getElementById('l-login').value, password: document.getElementById('l-pass').value }) 
+            });
+            if(res.ok) {
+                const data = await res.json();
+                this.user = { login: document.getElementById('l-login').value, ...data.user };
+                this.updateUI();
+                this.switchView('main');
+            }
+        },
+        updateUI() {
+            document.getElementById('u-nick').innerText = this.user.nickname.toUpperCase();
+            document.getElementById('u-elo').innerText = this.user.elo;
+            document.getElementById('u-matches').innerText = this.user.matches;
+            document.getElementById('u-lvl-img').src = `https://back.faceit.com/s3/faceit-stats/images/elo-levels/level${this.user.level}.png`;
+        },
+        async startMatch() {
+            const btn = document.getElementById('q-btn');
+            const lbl = document.getElementById('queue-label');
+            btn.disabled = true; lbl.style.display = 'block';
+            
+            const res = await fetch('/api/match', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ login: this.user.login }) });
+            const data = await res.json();
+            
+            btn.disabled = false; lbl.style.display = 'none';
+            this.user = { ...this.user, ...data.user };
+            this.updateUI();
+            alert(data.win ? `VICTORY! +${data.gain} ELO` : `DEFEAT! ${data.gain} ELO`);
+        }
+    };
+</script>
+</body>
+</html>
