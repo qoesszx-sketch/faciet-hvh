@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FACEIT.CC</title>
+    <title>FACEIT-HVH.CC</title>
     <style>
         :root {
             --bg-dark: #0c0c0c;
@@ -15,7 +15,6 @@
             --text-dim: #888888;
         }
 
-        /* Устанавливаем базовые стили для правильного расчета размеров */
         * { box-sizing: border-box; }
 
         body {
@@ -28,13 +27,12 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden; /* Запрет горизонтального скролла */
+            overflow-x: hidden;
         }
 
-        /* СНЕГ НА ЗАДНЕМ ПЛАНЕ */
         canvas#snow { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 0; opacity: 0.3; }
 
-        /* ГЛАВНЫЙ КОНТЕЙНЕР (SKEET MENU) */
+        /* МЕНЮ */
         .skeet-container {
             width: 95%;
             max-width: 850px;
@@ -49,7 +47,7 @@
             box-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
-        /* РАЗНОЦВЕТНАЯ РАДУГА */
+        /* ПЯТИЦВЕТНАЯ РАДУГА */
         .skeet-rainbow {
             height: 2px;
             background: linear-gradient(to right, #5d7ad3, #c35dbf, #e3c15d, #5de39d, #5d7ad3);
@@ -58,7 +56,7 @@
 
         .skeet-main { display: flex; flex: 1; min-height: 0; }
 
-        /* ЛЕВАЯ ПАНЕЛЬ */
+        /* ВКЛАДКИ */
         .skeet-tabs {
             width: 150px;
             border-right: 1px solid var(--border-inner);
@@ -81,14 +79,13 @@
         /* КОНТЕНТ */
         .skeet-content { flex: 1; padding: 20px; overflow-y: auto; background: #151515; }
 
-        /* ГРУПП-БОКСЫ (ФОРУМНЫЙ СТИЛЬ) */
         .group-box {
             border: 1px solid var(--border-inner);
             padding: 15px;
             position: relative;
             margin-bottom: 20px;
             background: #171717;
-            width: 100%; /* Гарантирует ширину внутри родителя */
+            width: 100%;
         }
 
         .group-label {
@@ -99,20 +96,23 @@
             padding: 0 5px;
             color: #fff;
             font-size: 10px;
+            text-transform: lowercase;
         }
 
-        /* ИСПРАВЛЕНО: СТИЛИ ПОЛЕЙ ВВОДА (ОТЦЕНТРОВКА) */
+        /* ИСПРАВЛЕННЫЕ ИНПУТЫ (БЕЗ СМЕЩЕНИЯ) */
         input {
             background: #0d0d0d;
             border: 1px solid var(--border-inner);
             color: #fff;
             padding: 8px;
-            width: 100%; /* Занимает всю ширинуgroup-box */
+            width: 100%;
             margin-bottom: 10px;
             font-size: 11px;
             font-family: 'Tahoma', sans-serif;
-            display: block; /* Убираем инлайновые смещения */
+            display: block;
+            outline: none;
         }
+        input:focus { border-color: var(--accent); }
 
         .skeet-btn {
             background: linear-gradient(to bottom, #252525, #1a1a1a);
@@ -128,20 +128,17 @@
 
         .skeet-btn:active { outline-color: var(--accent); }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        /* МОБИЛКИ */
         @media (max-width: 600px) {
             .skeet-main { flex-direction: column; }
             .skeet-tabs { width: 100%; display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border-inner); }
             .tab-item { flex: 1; text-align: center; border-left: none !important; border-bottom: 2px solid transparent; padding: 10px; white-space: nowrap; }
             .tab-item.active { border-bottom: 2px solid var(--accent); }
             .skeet-container { margin: 10px auto; width: 92%; }
-            /* Исправление отступов в group-box на мобильных */
-            .group-box { padding: 12px; }
         }
 
-        /* ЧАТ */
         .chat-area { height: 180px; background: #0d0d0d; border: 1px solid var(--border-inner); padding: 10px; overflow-y: auto; margin-bottom: 10px; }
-        .chat-msg { margin-bottom: 4px; }
+        .chat-msg { margin-bottom: 4px; border-bottom: 1px solid #111; padding-bottom: 2px; }
         .chat-msg b { color: var(--accent); }
         
         .auth-overlay {
@@ -161,7 +158,7 @@
         <div style="padding: 20px;">
             <div id="login-form">
                 <div class="group-box">
-                    <span class="group-label">faceit.cc - login</span>
+                    <span class="group-label">faceit-hvh.cc - login</span>
                     <input type="text" id="l-login" placeholder="username">
                     <input type="password" id="l-pass" placeholder="password">
                     <button class="skeet-btn" onclick="app.login()">login</button>
@@ -170,7 +167,7 @@
             </div>
             <div id="reg-form" style="display:none;">
                 <div class="group-box">
-                    <span class="group-label">faceit.cc - registration</span>
+                    <span class="group-label">faceit-hvh.cc - register</span>
                     <input type="text" id="r-login" placeholder="username">
                     <input type="password" id="r-pass" placeholder="password">
                     <input type="text" id="r-nick" placeholder="nickname">
@@ -197,8 +194,8 @@
             <div id="v-home" class="tab-view">
                 <div class="group-box">
                     <span class="group-label">information</span>
-                    <div style="display:flex; align-items:center; flex-wrap: wrap; gap: 10px;">
-                        <img id="u-lvl-img" src="" style="width:50px; height:50px; border:1px solid var(--border-inner); background: #000;">
+                    <div style="display:flex; align-items:center;">
+                        <img id="u-lvl-img" src="" style="width:50px; height:50px; border:1px solid var(--border-inner); margin-right:15px; background: #000;">
                         <div>
                             <div id="u-nick" style="font-size:14px; color:#fff;">User</div>
                             <div id="u-status" style="color:#555;">Private Member</div>
@@ -248,47 +245,28 @@
 </div>
 
 <script>
-    /* ЭФФЕКТ СНЕГА */
+    /* СНЕГ */
     const canvas = document.getElementById('snow');
     const ctx = canvas.getContext('2d');
     let w, h, flakes = [];
-    
     function initSnow() {
         w = canvas.width = window.innerWidth;
         h = canvas.height = window.innerHeight;
         flakes = [];
-        // Создаем 60 снежинок
-        for(let i=0; i<60; i++) {
-            flakes.push({
-                x: Math.random() * w,
-                y: Math.random() * h,
-                s: Math.random() * 2 + 1, // Размер снежинки
-                d: Math.random() * 0.5 + 0.1 // Скорость падения
-            });
-        }
+        for(let i=0; i<60; i++) flakes.push({x:Math.random()*w, y:Math.random()*h, s:Math.random()*2+1, d:Math.random()*0.5+0.2});
     }
-    
     function drawSnow() {
-        ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; // Полупрозрачный белый цвет
+        ctx.clearRect(0,0,w,h); ctx.fillStyle = "rgba(255,255,255,0.4)";
         ctx.beginPath();
         flakes.forEach(f => {
-            ctx.moveTo(f.x, f.y);
-            ctx.arc(f.x, f.y, f.s, 0, Math.PI * 2);
-            // Движение снежинки вниз
-            f.y += f.s * f.d;
-            // Если снежинка ушла за экран, возвращаем её наверх
-            if(f.y > h) f.y = -5;
+            ctx.moveTo(f.x, f.y); ctx.arc(f.x, f.y, f.s, 0, Math.PI*2);
+            f.y += f.s * f.d; if(f.y > h) f.y = -5;
         });
-        ctx.fill();
-        requestAnimationFrame(drawSnow);
+        ctx.fill(); requestAnimationFrame(drawSnow);
     }
-    
-    window.addEventListener('resize', initSnow);
-    initSnow();
-    drawSnow();
+    window.addEventListener('resize', initSnow); initSnow(); drawSnow();
 
-    /* ЛОГИКА ПРИЛОЖЕНИЯ */
+    /* ЛОГИКА */
     const app = {
         user: null,
         toggleAuth(isLogin) {
@@ -310,31 +288,29 @@
                 nickname: document.getElementById('r-nick').value,
                 invite: document.getElementById('r-invite').value
             };
-            if(!data.login || !data.password || !data.nickname || !data.invite) return alert('fill all fields');
-            
             const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-            if(res.ok) { alert('success'); this.toggleAuth(true); } else { const err = await res.json(); alert(err.error); }
+            if(res.ok) { alert('Success!'); this.toggleAuth(true); } else { alert('Error during registration'); }
         },
         async login() {
             const login = document.getElementById('l-login').value;
-            const password = document.getElementById('l-pass').value;
-            if(!login || !password) return alert('fill all fields');
-
-            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ login, password }) });
+            const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ login, password: document.getElementById('l-pass').value }) });
             if(res.ok) {
                 const data = await res.json();
                 this.user = data.user;
                 this.updateUI();
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('main-menu').style.display = 'block';
-            } else { alert('failed'); }
+            } else { alert('Login failed'); }
         },
         updateUI() {
+            const lvl = this.user.level || 1;
             document.getElementById('u-nick').innerText = this.user.nickname;
             document.getElementById('s-elo').innerText = this.user.elo;
             document.getElementById('s-matches').innerText = this.user.matches;
-            document.getElementById('s-lvl').innerText = this.user.level;
-            document.getElementById('u-lvl-img').src = `https://back.faceit.com/s3/faceit-stats/images/elo-levels/level${this.user.level}.png`;
+            document.getElementById('s-lvl').innerText = lvl;
+            // Качественные иконки уровней с GitHub
+            document.getElementById('u-lvl-img').src = `https://raw.githubusercontent.com/pizat/faceit-levels-icons/master/level${lvl}.png`;
+            
             if(this.user.nickname === 'Admin-hvh') {
                 document.getElementById('u-status').innerHTML = '<span style="color:#ff4444; font-weight:bold;">Administrator</span>';
                 document.getElementById('admin-news-panel').style.display = 'block';
@@ -347,7 +323,6 @@
         },
         async postNews() {
             const text = document.getElementById('news-text').value;
-            if(!text) return;
             await fetch('/api/news', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ nickname: this.user.nickname, text }) });
             document.getElementById('news-text').value = '';
             this.loadNews();
@@ -370,14 +345,10 @@
             const btn = document.getElementById('q-btn');
             const stat = document.getElementById('q-status');
             btn.disabled = true; stat.style.display = 'block';
-            setTimeout(() => { btn.disabled = false; stat.style.display = 'none'; alert('Match found! IP: 185.12.33.10:27015'); }, 3000);
+            setTimeout(() => { btn.disabled = false; stat.style.display = 'none'; alert('Server found! IP: 185.25.181.10:27015'); }, 3000);
         }
     };
-    
-    // Автообновление чата
-    setInterval(() => { 
-        if(this.user && document.getElementById('v-chat').style.display !== 'none') app.loadChat(); 
-    }, 3000);
+    setInterval(() => { if(this.user && document.getElementById('v-chat').style.display !== 'none') app.loadChat(); }, 3000);
 </script>
 </body>
 </html>
